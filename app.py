@@ -30,9 +30,10 @@ def index():
 
 @app.route('/compress', methods=['POST'])
 def compress():
-    file = request.files['file']
+    file = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(request.files['file']))
     query = request.form['query']
     lam = int(request.form['lam'])
+    dropdown = request.form['dropdown']
 
     df = pd.read_pickle('image_embeddings.pickle')
     model, _, preprocess = create_model_and_transforms('ViT-B/32', pretrained='openai')
@@ -67,9 +68,13 @@ def compress():
         # Send the compressed image back to the front-end
     '''
     
-    im = image_to_image(secure_filename(file.filename), model, preprocess, df)
+    im = image_to_image(file, model, preprocess, df)
 
-    return send_file(im, mimetype='image/jpg')
+    '''im_io = BytesIO()
+    im.save(im_io, format='JPEG')
+    im_io.seek(0)'''
+
+    return send_file(im)
 
 if __name__ == '__main__':
     app.run(port=3000, debug=True)
